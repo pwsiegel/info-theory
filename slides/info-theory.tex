@@ -1,0 +1,480 @@
+\documentclass{beamer}
+% \usetheme{default}
+% \usetheme{Boadilla}
+% \usetheme{Madrid}
+% \usetheme{Montpellier}
+% \usetheme{Warsaw}
+% \usetheme{Copenhagen}
+% \usetheme{Goettingen}
+\usetheme{Hannover}
+% \usetheme{Berkeley}
+
+% \usecolortheme{crane}
+ % \beamertemplatesolidbackgroundcolor{craneorange!25}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{wasysym}
+\usepackage{comment}
+
+\newcommand{\eps}{\varepsilon}
+\newcommand{\inner}[1]{\left\langle #1 \right\rangle}
+\newcommand{\abs}[1]{\left| #1 \right|}
+\newcommand{\norm}[1]{\left\| #1 \right\|}
+\newcommand{\wt}{\widetilde}
+\newcommand{\tbf}{\textbf}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\N}{\mathbb{N}}
+\renewcommand{\P}{\mathbb{P}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\KL}[2]{D \left(#1 \middle\| #2 \right)}
+\title{Information theory and data science}
+\author{Paul Siegel}
+
+\begin{document}
+\frame{\titlepage}
+
+\frame{
+    \frametitle{Information theory}
+    What is information? \\
+    \bigskip \pause
+
+    Intution: information is an interpretation of data that causes us to revise our understanding of the world
+}
+
+\frame{
+    \frametitle{Examples}
+    \begin{itemize}
+        \item Someone on the internet says that Santa Claus lives on the moon \\
+            \tbf{Low information}: no data \pause
+        \item Trump tweeted something yesterday \\
+            \tbf{Low information}: doesn't change our understanding of the world \pause
+        \item Brandwatch beat its sales targets this quarter \\
+            \tbf{Modest information}: we can be more confident in the future \pause
+        \item The room is on fire \\
+            \tbf{High information}: we should probably evacuate the building
+    \end{itemize}
+}
+
+\frame{
+    Goal: assign a numerical value which measures how significantly we revise our understanding of the world in response to data, i.e. how much the data surprised us
+    \bigskip \pause
+
+    We represent our understanding at a given moment as a \emph{statistical model}, i.e. an assignment of probabilities to unobserved states or events \\
+}
+
+\frame{
+    \frametitle{Axioms of surprise}
+    We naturally expect a quantitative measure $S$ of surprise to have the following properties: \pause
+    \begin{itemize}
+        \item The surprisal $S(E)$ of an event $E$ should depend only on its probability $\P(E)$ \pause
+        \item Less probable events are more surprising: if $\P(E_1) < \P(E_2)$ then $S(E_1) > S(E_2)$ \pause
+        \item An event which we are sure will happen is not surpring at all: if $\P(E) = 1$ then $S(E) = 0$ \pause
+        \item If $E_1$ and $E_2$ are independent then the surprisal of observing both events is the sum of the suprisals of the events individually:
+            $$S(E_1 \cap E_2) = S(E_1) + S(E_2)$$
+    \end{itemize}
+}
+
+\frame{
+    \begin{theorem}
+        Negative logarithms are the only suprise functions:
+
+        $$S(E) = -\log_b \P(E)$$
+    \end{theorem}
+    \pause
+
+    $S(E)$ is often called the \emph{information content} of $E$
+}
+
+\frame{
+    \frametitle{Reminder about logarithms}
+    Logarithm just means "order of magnitude" relative to a chosen base:
+
+    $$\log_{10} 10 = 1, \quad \log_{10} 100 = 2, \quad \log_{10} 1000 = 3$$
+    $$\log_{10} 64 \approx 1.806$$
+
+    \pause
+
+    $$\log_{2} 2 = 1, \quad \log_{2} 4 = 2, \quad \log_{2} 8 = 3, \quad \log_{2} 10 \approx 3.322$$
+
+    \pause
+
+    Logarithms are by definition inverse to exponential functions:
+
+    $$x = \log_{10}(10^x) = 10^{\log_{10} x}$$
+}
+
+\frame{
+    \frametitle{Information entropy}
+    \begin{definition}
+        Given a statistical model which assigns $n$ possible out comes of an experiment probabilities $\tbf{p} = (p_1, \ldots, p_n)$, the \emph{information entropy} of $\tbf{p}$ is by definition the average information content:
+
+        $$H(\tbf{p}) = \E(S) = -\sum_i p_i \log p_i$$
+
+        (We adopt the convention $0 \log 0 = 0$ for these purposes)
+    \end{definition}
+}
+
+\frame{
+    \begin{example}
+        We flip a coin which comes up heads with probability $p$ and tails with probability $1-p$.  What is the information entropy of the coin?  Bonus: what value of $p$ gives the largest entropy?
+        \bigskip \pause
+
+        This is the special case of the previous formula where $n=2$, $p_1 = p$, and $p_2 = 1-p$.  The formula reads:
+
+        $$H(\tbf{p}) = -p \log p - (1-p) \log(1-p)$$
+        \pause
+
+        With a bit of calculus, the largest value occurs at $p = \frac{1}{2}$.
+    \end{example}
+}
+
+\frame{
+    \begin{itemize}
+        \item The minimum entropy is always obtained for the "delta distribution" where one outcome has probability $1$ and all others have probability $0$; its entropy is $0$ \pause
+        \item The maximum entropy is always obtained for the uniform probability distribution $\tbf{u} = (\frac{1}{n}, \ldots, \frac{1}{n})$; its entorpy is: \\
+            $$H(\tbf{u}) = \log n$$ \pause
+    \end{itemize}
+
+    So we can think of entropy as being a measure of where our present understanding is on the spectrum from absolute certainty (we know exactly which outcome will occur) to complete ignorance (we consider all outcomes equally likely).
+}
+
+\frame{
+    \frametitle{Relative entropy}
+    We introduced the concept of information as a quantitative measure of how significantly data caused us to revise our understanding.\\
+    \bigskip \pause
+
+    This means that information is best viewed as a \emph{relative quantity}: if we start out believing that a system is described by a statistical model $\tbf{q} = (q_1, \ldots, q_n)$, how surprised would we be to learn that it really obeys a model $\tbf{p} = (p_1, \ldots, p_n)$?\\
+    \bigskip \pause
+
+    Answer: take the $\tbf{p}$-average of the difference between the information content of $\tbf{q}$ and $\tbf{p}$.
+}
+
+\frame{
+    \begin{definition}
+        Given two probability distributions $\tbf{p}$ and $\tbf{q}$, the \emph{relative entropy} from $\tbf{q}$ to $\tbf{p}$, also called the \emph{Kullback-Leibler divergence}, is by definition:
+
+        \begin{align*}
+            \KL{\tbf{p}}{\tbf{q}} &= -\sum_i p_i (\log q_i - \log p_i) \\
+            &= -\sum_i p_i \log \left( \frac{q_i}{p_i} \right)
+        \end{align*}
+    \end{definition}
+}
+
+\frame{
+    \begin{example}
+        Luna and I happen upon a coin.  Upon inspecting the coin, I believe that the coin is fair while Luna thinks heads is twice as likely to come up as tails.  We flip the coin 1000 times, and it comes up heads 600 times.  Who is more surprised by this result?
+    \end{example}
+}
+
+\frame{
+    \frametitle{Cross entropy}
+    If we stare at the definition of relative entropy, we see ordinary entropy pop out:
+
+    \begin{align*}
+        \KL{\tbf{p}}{\tbf{q}} &= {\color{red} \sum_i p_i \log p_i} - \sum_i p_i \log q_i \\
+        &= {\color{red} -H(p)} - \sum_i p_i \log q_i
+    \end{align*}
+    \pause
+
+    The other term is important in its own right, and it is called the \emph{cross entropy} from $\tbf{q}$ to $\tbf{p}$:
+
+    $$H(\tbf{p}, \tbf{q}) = -\sum_i p_i \log q_i$$
+    \pause
+
+    For reasons that we'll return to later, this is a common loss function in machine learning.
+}
+
+\frame{
+    \frametitle{Interlude: review of random variables}
+    A random variable $X$ is just a function defined on a probability space, so that we can speak of the probability that it takes a certain value. \\
+    \bigskip \pause
+
+    The \emph{density function} of $X$ is the function whose value at an input $x$ is the probability that $X = x$:
+
+    $$p_X(x) = \P(X = x)$$
+}
+
+\frame{
+    \begin{example}
+    A possible density function for the random variable ``sentiment of a Tweet'', denoted $S$:
+        $$
+        p_S(x) = \begin{cases} 0.1 & x = \text{positive} \\ 0.8 & x = \text{neutral} \\ 0.1 & x = \text{negative} \end{cases}
+        $$
+    \end{example}
+}
+
+\frame{
+    \frametitle{Review of random variables}
+    The \emph{joint density function} of two random variables is the function which specifies the probabilities that various values of $X$ co-occur with various values of $Y$:
+
+    $$p_{X, Y}(x,y) = \P(X = x, Y = y)$$
+    \pause
+
+    We often specify joint density functions via tables:
+
+    \begin{center}
+      \begin{tabular}{ | c | c | c | c | }
+        \hline
+          & Positive & Neutral & Negative \\ \hline
+        Covid19 & 0.01 & 0.03 & 0.06 \\ \hline
+        No Covid19 & 0.09 & 0.77 & 0.04 \\
+        \hline
+      \end{tabular}
+    \end{center}
+}
+
+\frame{
+    \frametitle{Review of random variables}
+    We say that two random variables are \emph{independent} if the co-occurrence events are independent; this can be expressed in terms of density functions as:
+
+    $$p_{X,Y}(x,y) = p_X(x) p_Y(y)$$
+    \pause
+
+    \tbf{Exercise:} Are the Sentiment and Covid19 random variables from the previous slide independent?
+}
+
+\frame{
+    \frametitle{Review of random variables}
+    Given random variables $X$, $Y$ with joint density function $p(x,y)$, the \emph{marginal density function} of $X$ is:
+
+    $$p_X(x) = \sum_y p(x,y)$$
+}
+
+\frame{
+    \begin{example}
+        In the Sentiment vs Covid19 example, the marginal density of the sentiment random variable $S$ at ``Positive'' is:
+
+        \begin{align*}
+            p_S(\text{Positive}) &= p(Positive, Covid) + p(Positive, No Covid) \\
+            &= 0.01 + 0.09 \\
+            &= 0.1
+        \end{align*}
+    \end{example}
+    \pause
+
+    \tbf{Exercise:} Use pandas to compute the full marginal density functions of both Sentiment and Covid19.
+}
+
+\frame{
+    \frametitle{Review of random variables}
+    Given two events $A$ and $B$, the \emph{conditional probability} of $A$ given $B$ is by definition:
+
+    $$\P(A \vert B) = \frac{\P(A \cap B)}{\P(B)}$$
+    \pause
+
+    \tbf{Exercise:} What is the conditional probability of positive sentiment given covid?
+}
+
+\frame{
+    \frametitle{Review of random variables}
+    Given two random variables $X$ and $Y$ with joint density function $p(x,y)$, the \emph{conditional density function} of $X$ given $Y$ is:
+
+    \begin{align*}
+        p_{X \vert Y}(x,y) &= \P(X = x | Y = y) \\
+        &= \frac{p(x,y)}{p_Y(y)}
+    \end{align*}
+
+    where $p_X$ is the marginal density function for $X$.
+    \bigskip \pause
+
+    \tbf{Exercise:} Compute the conditional density function of Sentiment given Covid, and of Covid given Sentiment
+}
+
+\frame{
+    \frametitle{Mutual information}
+    Basic statistics question: given data about $X$ and $Y$, how can we tell if they are independent? \\
+    \bigskip \pause
+
+    Information theoretic formulation: if we believe that $X$ and $Y$ are independent, how surprising will we find data about their joint distribution?\\
+    \bigskip \pause
+
+    More precisely: what is the relative entropy from the probability distribution $p_X p_Y$ to $p_{X,Y}$?
+}
+
+\frame{
+    \begin{definition}
+        Given two random variables $X$ and $Y$ with joint density $p(x,y)$ and marginal densities $p_X(x)$ and $p_Y(y)$, the \emph{mutual information} of $X$ and $Y$ is the relative entropy from $p_X p_Y$ to $p_{X,Y}$:
+
+        \begin{align*}
+            I(X,Y) &= \KL{p_{X,Y}}{p_X p_Y} \\
+            &= -\sum_{x,y} p_{X,Y}(x,y) \log \left( \frac{p_X(x) p_Y(y)}{p_{X,Y}(x,y)} \right)
+        \end{align*}
+
+        The summand on the right is called the \emph{pointwise mutual information} of $X$ and $Y$, or PMI for short.
+    \end{definition}
+    \pause
+
+    \tbf{Exercise:} Compute the mutual information of Sentiment and Covid.
+}
+
+\frame{
+    \frametitle{Conditional entropy}
+    Let's rewrite the formula for mutual information a little bit: \pause
+
+    $$I(X,Y) = -\sum_{x,y} p_{X,Y}(x,y) \log \left( \frac{p_X(x) \color{red}{p_Y(y)}}{\color{red}{p_{X,Y}(x,y)}} \right)$$
+
+    The expression in red is the reciprocal of the conditional density function $p_{X \vert Y}(x,y)$, and we can split it out using the laws of logarithms: \pause
+
+    $$\log \left( \frac{p_X(x) p_Y(y)}{p_{X,Y}(x,y)} \right) = \log p_X(x) - \log p_{X \vert Y}(x,y)$$
+}
+
+\frame{
+    The term involving $p_X(x)$ simplifies to become the entropy of $X$, so we end up with:
+
+    $$I(X,Y) = H(X) - \left( \color{blue}{-\sum_{x,y} p_{X,Y}(x,y) \log p_{X \vert Y}(x,y)} \right)$$ \pause
+
+    The expression in blue above is called the \emph{conditional entropy} of $X$ given $Y$, denoted $H(X \vert Y)$.
+    \bigskip \pause
+
+    Conclusion:
+    $$I(X,Y) = H(X) - H(X \vert Y)$$
+    \pause
+
+    Conditional entropy is often easier to work with than mutual information, as we'll see in an example next.
+}
+
+\frame{
+    \frametitle{Application: relevance scoring}
+    Problem: what are the most important terms in a document?
+    \bigskip \pause
+
+    Concrete examples of this problem in real life:
+    \begin{itemize}
+        \item What are the most important words in a Wikipedia page? \pause
+        \item Who are the most important authors that used a hashtag? \pause
+        \item What are the most important tokens in tweets with positive sentiment?
+    \end{itemize}
+}
+
+\frame{
+    Information theoretic interpretation: \pause
+
+    \begin{itemize}
+        \item If every document contained the exact same distribution of terms, then all terms would be equally (un)important to each document \pause
+        \item Thus the mutual information $I(D,T)$ represents the extent to which knowing the terms in a document reduces our uncertainty about which document we're looking at, where $D$ represents a randomly chosen document and $T$ a randomly chosen term \pause
+        \item Relevance score: the pointwise mutual information of a specific term in a specific document
+    \end{itemize}
+}
+
+\frame{
+    Notation: \pause
+
+    \begin{itemize}
+        \item $N$ is the number of documents \pause
+        \item $N_t$ is the number of documents containing the term $t$ \pause
+        \item $\abs{d}$ is the number of terms in document $d$ \pause
+        \item $f(t,d)$ is the number of time the term $t$ appears in document $d$ ($f$ for frequency) \pause
+    \end{itemize}
+
+    We'll compute $I(D,T)$ in terms of these numbers using the formula:
+
+    $$I(D,T) = H(D) - H(D \vert T)$$
+}
+
+\frame{
+    \frametitle{Calculate $H(D)$}
+    Model: every document is equally likely to be chosen, i.e. $p_D(d) = \frac{1}{N}$
+    \bigskip \pause
+
+    Entropy:
+
+    \begin{align*}
+        H(D) &= -\sum_d p_D(d) \log p_D(d) \\
+        &= -\sum_d \frac{1}{N} \log \frac{1}{N} \\
+        &= -N \frac{1}{N} \log \frac{1}{N} \\
+        &= \log \frac{1}{N}
+    \end{align*}
+}
+
+\frame{
+    Trick (for later): write this as
+
+    $$H(D) = -\sum_t p_T(t) \log \frac{1}{N}$$
+
+    We can do this since $\sum_t p_T(t) = 1$ (probabilities of all terms must sum to 1).
+}
+
+\frame{
+    \frametitle{Calculate $H(D \vert T)$}
+    The definition of conditional entropy is:
+
+    $$H(D \vert T) = -\sum_{d,t} p_{D,T}(d,t) \log p_{D \vert T}(d, t)$$ \pause
+
+    Recall that $p_{D,T} = p_T p_{D \vert T}$ - this is just the definition of the conditional density function.
+    So: \pause
+
+    $$H(D \vert T) = -\sum_{d,t} p_T(t) p_{D \vert T}(d,t) \log p_{D \vert T}(d, t)$$
+}
+
+\frame{
+    If we assume the $N_t$ documents containing the term $t$ are all equally likely, then $p_{D \vert T}(d,t) = \frac{1}{N_t}$; this gives:
+
+    \begin{align*}
+        H(D \vert T) &= -\sum_{d,t} p_T(t) \frac{1}{N_t} \log \frac{1}{N_t} \\
+        &= -\sum_t p_T(t) N_t \frac{1}{N_t} \log \frac{1}{N_t} \\
+        &= -\sum_t p_T(t) \log \frac{1}{N_t}
+    \end{align*}
+}
+
+\frame{
+    Putting it all together, the mutual information is:
+
+    \begin{align*}
+        I(D,T) &= H(D) - H(D \vert T) \\
+        &= -\sum_t p_T(t) \log \frac{1}{N} + \sum_t p_T(t) \log \frac{1}{N_t} \\
+        &= \sum_t p_T(t) \log \frac{N}{N_t}
+    \end{align*}
+}
+
+\frame{
+    It remains only to calculate $p_T(t)$.
+    In a given document $d$, the probability of choosing a term $t$ is just its frequency in the document divided by the total number of terms in $d$; this gives: \pause
+
+    $$p_T(t) = \sum_d \frac{f(t,d)}{\abs{d}}$$ \pause
+
+    Conclusion:
+
+    $$I(D,T) = \sum_{d,t} \frac{f(t,d)}{\abs{d}} \log \frac{N}{N_t}$$
+}
+
+\frame{
+    The summands (pointwise mutual information) give a natural notion of relevance score for a term $t$ to a document $d$:
+
+    $$\text{PMI}(d,t) = \frac{f(t,d)}{\abs{d}} \log \frac{N}{N_t}$$ \pause
+
+    This is quite similar to the classical TF-IDF score, given by:
+
+    $$\text{TF-IDF}(t,d) = f(t,d) \log \frac{N}{N_t}$$ \pause
+
+    Opinion: classical TF-IDF does not have a particularly convincing statistical interpretation, and mutual information should be used instead.
+}
+
+\begin{comment}
+
+\frame{
+    \begin{align*}
+        X &= \sum p(d,t) \frac{p_D(d) p_T(t)}{p(d,t)} \\
+        &= \sum \frac{f_{t,d}}{F} \frac{
+    \end{align*}
+}
+
+\begin{comment}
+
+\frame{
+\frametitle{A brief history of mathematics}
+Math as we know it began in ancient Greece (about 500 BC - 600 AD)
+\bigskip \pause
+
+\begin{center}
+\includegraphics[scale = .5]{images/elements.jpg}
+\end{center}
+}
+
+\end{comment}
+
+\end{document}
