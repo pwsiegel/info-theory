@@ -454,27 +454,91 @@
     Opinion: classical TF-IDF does not have a particularly convincing statistical interpretation, and mutual information should be used instead.
 }
 
-\begin{comment}
+\frame{
+    \frametitle{Entropy and Bayes Rule}
+    Consider a weighted coin with unknown probabilities $p_H$ and $p_T = 1 - p_H$.
+    \bigskip \pause
+
+    You have a hypothesis that the true probabilities belong to a family of models $\tbf{p}(t) = (p_H(t), p_T(t))$ labeled by some parameter $t$, and you wish to estimate $t$ from data.
+    \bigskip \pause
+
+    Example: we could consider the family $p_H(t) = t$, $p_T(t) = 1 - t$ for $t \in [0,1]$.
+}
 
 \frame{
+    Flip the coin $N$ times and observe the empirical probabilities $\tbf{q} = (q_H, q_T)$, meaning heads came up $N_H = q_H N$ times and tails came up $N_T = q_T N$ times.
+    What is the probability of this observation given hypothesis $t$?
+    \bigskip \pause
+
+    The answer is given by the binomial distribution:
+
+    $$\P(\tbf{q} \vert t) = \frac{N!}{N_H! N_T!} p_H(t)^{N_H} p_T(t)^{N_T}$$ \pause
+
+    What happens if we imagine holding $\tbf{q}$ fixed and letting $N \to \infty$?
+}
+
+\frame{
+    Let's take logs to turn all of the products into sums:
+
     \begin{align*}
-        X &= \sum p(d,t) \frac{p_D(d) p_T(t)}{p(d,t)} \\
-        &= \sum \frac{f_{t,d}}{F} \frac{
-    \end{align*}
+        \log \P(\tbf{q} \vert t) &= \log \frac{N!}{(q_H N)! (q_T N)!} + \log \left( p_H(t)^{q_H N} p_T(t)^{q_T N} \right) \\
+        &= \left( \log N! - \log (q_H N)! - \log(q_T N)! \right) \\
+        &\quad + \left(q_H N \log p_H(t) + q_T N \log p_T(t)\right)
+    \end{align*} \pause
 }
-
-\begin{comment}
 
 \frame{
-\frametitle{A brief history of mathematics}
-Math as we know it began in ancient Greece (about 500 BC - 600 AD)
-\bigskip \pause
+    Amazing fact (Sterling's formula): $\log m! \approx m \log m - m$ as $m \to \infty$
+    \bigskip \pause
 
-\begin{center}
-\includegraphics[scale = .5]{images/elements.jpg}
-\end{center}
+    With a little bit of algebra (using $q_H + q_T = 1)$, this gives:
+
+    $$\log N! - \log (q_H N)! - \log (q_T N)! \approx -N(q_H \log q_H + q_T \log q_T)$$
 }
 
-\end{comment}
+\frame{
+    Put it all together:
+
+    \begin{align*}
+        \log \P(\tbf{q} \vert t) &\approx -N(q_H \log q_H + q_T \log q_T) \\
+        &\quad + N(q_H \log p_H(t) + q_T \log p_T(t)) \\
+        &= N \left(q_H \log \frac{p_H(t)}{q_H} + q_T \log \frac{p_T(t)}{q_T}\right) \\
+        &= -N\, \KL{\tbf{q}}{\tbf{p}(t)}
+    \end{align*} \pause
+
+    Interpretation: relative entropy is asymptotically the log-likelihood model for a statistical model with a finite set of outcomes!
+}
+
+\frame{
+    Now let's apply Bayes' rule, choosing some prior probability distribution $\P(t)$ over our space of models:
+
+    \begin{align*}
+        \P(t \vert \tbf{q}) &\propto \P(t) \P(\tbf{q} \vert t) \\
+        &\approx \P(t) \exp(-N\, \KL{\tbf{q}}{\tbf{p}(t)})
+    \end{align*} \pause
+
+    For very large $N$, the posterior probability $\P(t \vert \tbf{q})$ will be highly concentrated near the parameter $t$ which minimizes the relative entropy $\KL{\tbf{q}}{\tbf{p}(t)}$.
+}
+
+\frame{
+    \tbf{Principle of Minimum Discrimination Information}: given new data about a model $\tbf{p}_0$, revise it to a new model $\tbf{p}_1$ which minimizes $\KL{\tbf{p}_1}{\tbf{p}_0}$.
+    \bigskip \pause
+
+    Note that if the starting model is the uniform distribution then minimizing relative entropy is the same as maximizing the entropy of $\tbf{p}_1$:
+    \bigskip \pause
+
+    \tbf{Principle of Maximum Entropy}: given data about a system about which you have no prior beliefs, choose the model $\tbf{p}$ which maximizes $H(\tbf{p})$.
+}
+
+\frame{
+    Recall the relationship between relative entropy and cross entropy:
+
+    $$H(\tbf{p}_1, \tbf{p}_0) = H(\tbf{p}_1) + \KL{\tbf{p}_1}{\tbf{p}_0}$$ \pause
+
+    If we fix $\tbf{p}_1$ instead of $\tbf{p}_0$ then minimizing relative entropy is the same thing as minimizing cross entropy.
+    \bigskip \pause
+
+    This is why cross-entropy is sometimes used as a loss function in machine learning, though it's better to use relative entropy!
+}
 
 \end{document}
