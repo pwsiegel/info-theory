@@ -12,6 +12,7 @@ plotly = "*"
 scipy = "*"
 pyarrow = "*"
 sklearn = "*"
+maxentropy = "*"
 
 [requires]
 python_version = "3.8"
